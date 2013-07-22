@@ -10,5 +10,7 @@
 #include <msp430g2553.h>
 #include <stdint.h>
 void vtimer_wait(uint16_t uiDelay);
+void vTimer_1s(void);
+#define WAIT_1SEC	20			/// 20 ~ 1s
 
 #endif /* TIMER_H_ */

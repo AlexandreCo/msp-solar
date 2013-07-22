@@ -7,6 +7,7 @@
 #include <msp430g2553.h>
 #include "timer.h"
 
+
 void vtimer_wait(uint16_t uiDelay)
 {
 	__enable_interrupt();                     // Enable interrupts.
@@ -16,6 +17,13 @@ void vtimer_wait(uint16_t uiDelay)
 	LPM0;									  // 85uA
 	TACCTL0 &= ~CCIE;                         // Disable timer Interrupt
 	__disable_interrupt();
+}
+
+void  vTimer_1s()
+{
+	char ucWait;
+	for(ucWait=0;ucWait<WAIT_1SEC;ucWait++)
+		vtimer_wait(60000);
 }
 
 #pragma vector=TIMER0_A0_VECTOR
