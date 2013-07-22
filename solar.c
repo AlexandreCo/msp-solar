@@ -23,10 +23,7 @@
 #include "flash.h"
 
 #define WDG_STOP (WDTCTL = WDTPW + WDTHOLD)                 // Stop WDT
-#define STOP_WAITING	20			/// 20 ~ 1s
-#define SAMPLE_TIME_SEC	300			/// 300s =5min
-
-uint8_t ucWait=0;
+#define WAITING_TIME_SEC	300			/// 300s =5min
 
 #define cNbMaxSample	30
 void vClock_Init()
@@ -41,95 +38,114 @@ void vClock_Init()
 
 }
 
-
+static uint16_t _uiFlashAddr=cSegD_startAddr;
 
 void rxCallback(uint8_t ucCar)
 {
-	ucWait=STOP_WAITING;
+	if(ucCar=='R'){
+		_uiFlashAddr=cSegD_startAddr;
+		vFlash_EraseInfoSeg(cSegD);
+		vFlash_EraseInfoSeg(cSegC);
+		vFlash_EraseInfoSeg(cSegB);
+		vUart_puts("Raz...\n\r");
+	}
 }
 
 int16_t aiRamTab[32];
 
+
+void vLed_Init(void)
+{
+	P1DIR |= 0x41;                            // P1DIR is a register that configures the direction (DIR) of a port pin as an output or an input.
+	P1OUT = 0x01;
+}
+
+void vLed_Toogle(void)
+{
+	P1OUT ^= 0x41;                        // Toggle P1.0 using exclusive-OR operation (^=)
+}
+void vAffiche(int iTemp,int iAdc)
+{
+	vUart_puts("T=");
+	vUart_puti(iTemp,10);
+	vUart_puts(" p=");
+	vUart_puti(iAdc,10);
+	vUart_puts("\n\r");
+}
+void vSaveData(int iTemp,int iAdc)
+{
+	uint16_t uiCpt;
+
+	if(_uiFlashAddr==cSegA_startAddr)
+	{
+		_uiFlashAddr=cSegD_startAddr;
+	}
+
+	if(_uiFlashAddr==cSegD_startAddr)
+	{
+		uiCpt= (* (uint16_t *)cSegD_startAddr)+1;
+		vFlash_EraseInfoSeg(cSegD);
+		vFlase_vWriteInfoSeg(_uiFlashAddr, (char*)&uiCpt, sizeof(uiCpt));
+		_uiFlashAddr+=2;
+		_uiFlashAddr+=2;	//2 bytes free
+	}
+
+	if(_uiFlashAddr==cSegC_startAddr)
+	{
+		uiCpt= (* (uint16_t *)cSegC_startAddr)+1;
+		vFlash_EraseInfoSeg(cSegC);
+		vFlase_vWriteInfoSeg(_uiFlashAddr, (char*)&uiCpt, sizeof(uiCpt));
+		_uiFlashAddr+=2;
+		_uiFlashAddr+=2;	//2 bytes free
+	}
+
+	if(_uiFlashAddr==cSegB_startAddr)
+	{
+		uiCpt= (* (uint16_t *)cSegB_startAddr)+1;
+		vFlash_EraseInfoSeg(cSegB);
+		vFlase_vWriteInfoSeg(_uiFlashAddr, (char*)&uiCpt, sizeof(uiCpt));
+		_uiFlashAddr+=2;
+		_uiFlashAddr+=2;	//2 bytes free
+	}
+
+
+	vFlase_vWriteInfoSeg(_uiFlashAddr, (char*)&iTemp, sizeof(iTemp));
+	_uiFlashAddr+=2;
+	vFlase_vWriteInfoSeg(_uiFlashAddr, (char*)&iAdc, sizeof(iAdc));
+	_uiFlashAddr+=2;
+
+}
 int main(void)
 {
-	int8_t cIndex;
-	int32_t lTempDec=0;
-	int32_t lAdcDec=0;
-	int16_t uiSegAddr=cSegD_startAddr;
-	int8_t cTabIndex=2;
-	uint32_t ulUptime=0;
+	int16_t iTemp=0;
+	int16_t iAdc=0;
 	uint16_t uiSampleTime;
-	char *FlashC;
 
 	WDG_STOP;
 	vClock_Init();
 	vUart_init(rxCallback);
 	vtimer_wait(30);
-	init_Flash();
-	P1DIR |= 0x41;                            // P1DIR is a register that configures the direction (DIR) of a port pin as an output or an input.
-	P1OUT = 0x01;
-
-
-	vUart_puts("Uptime=");
-	FlashC = (char *) 0x1000;
-	lTempDec= *((uint32_t *) FlashC);
-	uiSampleTime=(lTempDec>>16)&0xFFFF;
-	vUart_puti(uiSampleTime,10);
-	vUart_puts(".");
-	uiSampleTime=(lTempDec)&0xFFFF;
-	vUart_puti(uiSampleTime,10);
-	vUart_puts("\n\r");
-
+	vFlash_init();
+	vLed_Init();
+	_uiFlashAddr=cSegD_startAddr;
 	while(1)
 	{
 		/// get temperature
 		vAdc_initTemp();
-		lTempDec=0;
-		for(cIndex=0;cIndex<10;cIndex++)
-			lTempDec+=lAdc_GetTemp();
-		vUart_puts("T=");
-		vUart_puti(lTempDec/10,10);
-		vUart_puts("\n\r");
-
-		aiRamTab[cTabIndex++]=(int16_t)lTempDec;
-
-		if(cTabIndex>30){
-			//ecriture de l'entete (uptime)
-			*((uint32_t *) &aiRamTab[0])=ulUptime;
-			ulUptime++;
-			cTabIndex=2;
-			write_Seg ((char *)uiSegAddr,(char *)aiRamTab);
-			uiSegAddr+=0x40;
-			if(uiSegAddr>=cSegA_startAddr){
-				uiSegAddr=cSegD_startAddr;
-			}
-		}
-
-		for(uiSampleTime=0;uiSampleTime<SAMPLE_TIME_SEC;uiSampleTime++)
-		{
-			for(ucWait=0;ucWait<STOP_WAITING;ucWait++)
-				vtimer_wait(60000);
-		}
-
-		P1OUT ^= 0x41;                        // Toggle P1.0 using exclusive-OR operation (^=)
-
-
-		/*
+		iTemp=lAdc_GetTemp();
+						/// get port 1.5
 		vAdc_init(5);
-		lAdcDec=0;
-		for(cIndex=0;cIndex<10;cIndex++)
-			lAdcDec+=iAdc_GetADC();
+		iAdc=iAdc_GetADC();
 
-		vUart_puts("; p1.5=");
-		vUart_puti(lAdcDec/10,10);
-		vUart_puts("\n\r");
+		vSaveData(iTemp,iAdc);
+		vAffiche(iTemp,iAdc);
 
-		for(ucWait=0;ucWait<STOP_WAITING;ucWait++)
-			vtimer_wait(60000);
-		P1OUT ^= 0x41;                        // Toggle P1.0 using exclusive-OR operation (^=)
+		vLed_Toogle();
 
-*/
-
+		for(uiSampleTime=0;uiSampleTime<WAITING_TIME_SEC;uiSampleTime++)
+		{
+			vTimer_1s();
+		}
 	}
 }
 
