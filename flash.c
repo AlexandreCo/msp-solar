@@ -7,106 +7,36 @@
 #include <msp430g2553.h>
 #include "flash.h"
 
-
-
-
-char cRead_Seg(char * pcAddr);
-void erase_Seg (char * pcAddr);
-
-
-void init_Flash()
+void vFlash_init()
 {
 	FCTL2 = FWKEY + FSSEL0 + FN1;             // MCLK/3 for Flash Timing Generator
 }
 
 
-void write_Seg (char * pcAddr,char * acTab)
+void vFlash_EraseInfoSeg(uint8_t ucNumSeg)
 {
-	char *Flash_ptr;                          // Flash pointer
-	unsigned int i;
-	Flash_ptr = (char *) pcAddr;              // Initialize Flash pointer
+	char *Flash_ptr;
+	Flash_ptr = (char *) cSegD_startAddr+ucNumSeg*cInfoSeg_Size;              // Initialize Flash pointer
 	FCTL1 = FWKEY + ERASE;                    // Set Erase bit
 	FCTL3 = FWKEY;                            // Clear Lock bit
 	*Flash_ptr = 0;                           // Dummy write to erase Flash segment
-	FCTL1 = FWKEY + WRT;                      // Set WRT bit for write operation
-	for (i=0; i< 64; i++){
-	   *Flash_ptr++ = *acTab++;                   // Write value to flash
-	}
-	FCTL1 = FWKEY;                            // Clear WRT bit
-	FCTL3 = FWKEY + LOCK;                     // Set LOCK bit
+
 }
 
 
 
-void write_SegA (char *pcValue)
+void vFlase_vWriteInfoSeg(uint16_t uiAddr, char * acData, char cNbByte)
 {
-	write_Seg ((char *)cSegA_startAddr,pcValue);
-}
-
-void write_SegB (char *pcValue)
-{
-	write_Seg ((char *)cSegB_startAddr,pcValue);
-}
-void write_SegC (char *pcValue)
-{
-	write_Seg ((char *)cSegC_startAddr,pcValue);
-}
-void write_SegD (char *pcValue)
-{
-	write_Seg ((char *)cSegD_startAddr,pcValue);
-}
-
-
-char cRead_SegC (char cIndex)
-{
-	return cRead_Seg((char *)(cSegD_startAddr+cIndex));
-}
-
-char cRead_Seg(char * pcAddr)
-{
-	char * Flash_ptr= (char *)0x10C0;
-	return Flash_ptr[0];
-}
-
-
-
-
-
-
-void ReadA(){
-	char *FlashC;
-	FlashC = (char *) 0x1040;
-	FCTL1 = FWKEY + ERASE;
-	FCTL3 = FWKEY;
-	FCTL1 = FWKEY + WRT;
-	char i = 0;
-	for(i = 0; i < 64; i++) {
-		*FlashC++; //data ici
-	}
-	FCTL1 = FWKEY;
-	FCTL3 = FWKEY + LOCK;
-}
-
-
-
-void WriteA(char *acTab){
-	char *Flash_ptr;                          // Flash pointer
+	char *Flash_ptr;
 	unsigned int i;
-	Flash_ptr = (char *) 0x1040;              // Initialize Flash pointer
-	FCTL1 = FWKEY + ERASE;                    // Set Erase bit
-	FCTL3 = FWKEY;                            // Clear Lock bit
-	*Flash_ptr = 0;                           // Dummy write to erase Flash segment
+	Flash_ptr = (char *)uiAddr;
 	FCTL1 = FWKEY + WRT;                      // Set WRT bit for write operation
-	for (i=0; i< 64; i++){
-	   *Flash_ptr++ = *acTab++;                   // Write value to flash
+	FCTL3 = FWKEY;                             // Clear Lock bit
+
+	for (i=0; i< cNbByte; i++){
+	   *Flash_ptr++ = *acData++;                   // Write value to flash
 	}
 	FCTL1 = FWKEY;                            // Clear WRT bit
 	FCTL3 = FWKEY + LOCK;                     // Set LOCK bit
+
 }
-
-
-
-
-
-
-

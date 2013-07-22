@@ -15,7 +15,25 @@
 #define cSegB_startAddr	0x1080
 #define cSegC_startAddr	0x1040
 #define cSegD_startAddr	0x1000
-void init_Flash(void);
+
+#define cInfoSeg_startAddr	0x1000
+#define cInfoSeg_NbMax		0x04
+#define cInfoSeg_Size		0x40
+
+enum{
+	cSegD=0,
+	cSegC,
+	cSegB,
+	cSegA,
+};
+
+
+void vFlash_init(void);
+
+void vFlash_EraseInfoSeg(uint8_t ucNumSeg);
+void vFlase_vWriteInfoSeg(uint16_t uiAddr, char * acData, char cNbByte);
+
+
 void write_SegA (char *pcValue);
 void write_SegB (char *pcValue);
 void write_SegC (char *pcValue);
