@@ -18,8 +18,9 @@ void vAdc_initTemp(void)
 
 void vAdc_init(int8_t channel)
 {
-	ADC10CTL0 = ADC10SHT_2 + ADC10ON + ADC10IE; // ADC10ON, interrupt enabled
-	ADC10CTL1 = channel*INCH_1;                       // input A1
+	ADC10CTL1 = channel*INCH_1 + ADC10DIV_3;                       // input A1
+	ADC10CTL0 = SREF_0 + ADC10SHT_3 + REFON  + ADC10ON + ADC10IE; // ADC10ON, interrupt enabled
+
 	ADC10AE0 |= (1<<channel);                         // PA.5 ADC option select
 
 }
