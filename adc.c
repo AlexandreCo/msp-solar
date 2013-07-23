@@ -4,7 +4,7 @@
  *  Created on: 16 avr. 2013
  *      Author: alexandre.github@gmail.com
  */
-
+#include <legacymsp430.h>
 #include "adc.h"
 /// param in channel : INCH_10
 void vAdc_initTemp(void)
@@ -54,8 +54,10 @@ int16_t iAdc_GetADC(void)
 }
 
 // ADC10 interrupt service routine
-#pragma vector=ADC10_VECTOR
-__interrupt void ADC10_ISR (void)				//sortir du wait sur fin de conversion
+//#pragma vector=ADC10_VECTOR
+//__interrupt void ADC10_ISR (void)				//sortir du wait sur fin de conversion
+interrupt (ADC10_VECTOR)
+ADC10_ISR (void)
 {
 	__bic_SR_register_on_exit(CPUOFF);        // Clear CPUOFF bit from 0(SR)
 }

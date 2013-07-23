@@ -1,6 +1,12 @@
 Debug
 .settings/
 *~
+*.d
+*.o
+*.swp
+*.hex
+*.elf
+*.map
 .cproject
 .project
 core

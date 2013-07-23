@@ -4,6 +4,7 @@
  *  Created on: 16 avr. 2013
  *      Author: alexandre.github@gmail.com
  */
+#include <legacymsp430.h>
 #include <msp430g2553.h>
 #include "timer.h"
 
@@ -26,8 +27,10 @@ void  vTimer_1s()
 		vtimer_wait(60000);
 }
 
-#pragma vector=TIMER0_A0_VECTOR
-__interrupt void ta0_isr(void)					//pour sortir du wait
+//#pragma vector=TIMER0_A0_VECTOR
+//__interrupt void ta0_isr(void)					//pour sortir du wait
+interrupt (TIMER0_A0_VECTOR)
+ta0_isr(void)
 {
 	TACTL = 0;
 	LPM0_EXIT;                                // Exit LPM0 on return

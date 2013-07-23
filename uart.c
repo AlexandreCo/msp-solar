@@ -5,7 +5,7 @@
  *      Author: alexandre.github@gmail.com
  */
 
-
+#include <legacymsp430.h>
 #include "uart.h"
 
 #define USE_RXINT
@@ -70,16 +70,20 @@ void vUart_init(rx_t rx)
 
 #ifdef USE_RXINT
 // reveil le CPU
-#pragma vector=USCIAB0RX_VECTOR
-__interrupt void USCI0RX_ISR(void)
+//#pragma vector=USCIAB0RX_VECTOR
+//__interrupt void USCI0RX_ISR(void)
+interrupt (USCIAB0RX_VECTOR)
+USCI0RX_ISR(void)
 {
 	tRx(UCA0RXBUF);
 	LPM0_EXIT;
 }
 #endif
 #ifdef USE_TXINT
-#pragma vector=USCIAB0TX_VECTOR
-__interrupt void USCI0TX_ISR(void)
+//#pragma vector=USCIAB0TX_VECTOR
+//__interrupt void USCI0TX_ISR(void)
+interrupt (USCIAB0TX_VECTOR)
+USCI0TX_ISR(void)
 {
 	UCA0TXBUF = ucBufTx[ucStart++];                 // TX next character
 	if(ucStart>(TX_BUF_SIZE-1))
