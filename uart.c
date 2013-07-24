@@ -7,7 +7,8 @@
 
 #include <legacymsp430.h>
 #include "uart.h"
-
+#include <stdlib.h>
+#include <string.h>
 #define USE_RXINT
 #define USE_TXINT
 
