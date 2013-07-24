@@ -75,7 +75,10 @@ endif
 .SILENT:
 .PHONY:	clean
 clean:
-	-$(RM) $(OBJECTS)
-	-$(RM) $(TARGET).*
-	-$(RM) $(SOURCES:.c=.lst)
-	-$(RM) $(DEPEND)
+	-$(RM) *.o
+	-$(RM) *.elf
+	-$(RM) *.hex
+	-$(RM) *.d
+	-$(RM) *.map
+	-$(RM) core
+	
